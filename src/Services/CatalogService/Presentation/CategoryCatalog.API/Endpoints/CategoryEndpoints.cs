@@ -1,4 +1,5 @@
-﻿using CatalogService.Application.Features.CategoryFeature.Commands.CreateCategoryCommand;
+using CatalogService.Application.Features.CategoryFeature.Commands.CreateCategoryCommand;
+using CatalogService.Application.Features.CategoryFeature.Commands.DeleteCategoryCommand;
 using CatalogService.Application.Features.CategoryFeature.Commands.UpdateCategoryCommand;
 using CatalogService.Application.Features.CategoryFeature.DTOs;
 using CatalogService.Application.Features.CategoryFeature.Queries.GetAllCategoryQuery;
@@ -7,7 +8,7 @@ using MediatR;
 
 namespace CategoryCatalog.API.Endpoints;
 
-public static class CaregoryEndpoints
+public static class CategoryEndpoints
 {
     public static IEndpointRouteBuilder RegisterCategoryEndpoints(this IEndpointRouteBuilder app)
     {
@@ -34,7 +35,7 @@ public static class CaregoryEndpoints
 
 
         // Get Category By Id Endpoint
-        app.MapGet("/{id}", async (
+        group.MapGet("/{id}", async (
             string id,
             IMediator mediator,
             CancellationToken cancellationToken
@@ -49,15 +50,15 @@ public static class CaregoryEndpoints
 
             return queryResponse.Result.IsSuccess
                 ? Results.Ok(queryResponse.Result.Data)
-                : Results.BadRequest(queryResponse.Result);
+                : Results.NotFound(queryResponse.Result);
         })
             .WithName("GetByIdCategory")
-            .WithDescription("Get By Id Category")
+            .WithDescription("Get category by ID")
             .Produces<GetByIdCategoryQueryResponse>(200)
             .Produces(404);
 
 
-        app.MapPost("/", async (
+        group.MapPost("/", async (
             CreateCategoryCommandDto createCategoryCommandDto,
             IMediator mediator,
             CancellationToken cancellationToken
@@ -70,16 +71,16 @@ public static class CaregoryEndpoints
                 cancellationToken
             );
             return commandResponse.Result.IsSuccess
-                ? Results.Ok(commandResponse.Result.SuccessMessage)
+                ? Results.Created($"/api/categories", commandResponse.Result.SuccessMessage)
                 : Results.BadRequest(commandResponse.Result);
         })
             .WithName("CreateCategory")
-            .WithDescription("Create Category")
+            .WithDescription("Create a new category")
             .Produces<CreateCategoryCommandResponse>(201)
             .Produces(400);
 
 
-        app.MapPut("/", async (
+        group.MapPut("/", async (
             UpdateCategoryCommandDto updateCategoryCommandDto,
             IMediator mediator,
             CancellationToken cancellationToken
@@ -95,11 +96,37 @@ public static class CaregoryEndpoints
             return commandResponse.Result.IsSuccess
                 ? Results.Ok(commandResponse.Result.SuccessMessage)
                 : Results.BadRequest(commandResponse.Result);
-        });
+        })
+            .WithName("UpdateCategory")
+            .WithDescription("Update an existing category")
+            .Produces(200)
+            .Produces(400)
+            .Produces(404);
 
 
-
-
+        group.MapDelete("/{id}", async (
+            string id,
+            IMediator mediator,
+            CancellationToken cancellationToken
+            ) =>
+        {
+            var commandResponse = await mediator.Send(new DeleteCategoryCommandRequest
+                {
+                    Id = id
+                },
+                cancellationToken
+            );
+            return commandResponse.Result.IsSuccess
+                ? Results.Ok(commandResponse.Result.SuccessMessage)
+                : Results.BadRequest(commandResponse.Result);
+        })
+            .WithName("DeleteCategory")
+            .WithDescription("Delete category by ID")
+            .Produces(200)
+            .Produces(400)
+            .Produces(404);
+            
         return app;
     }
 }
+
