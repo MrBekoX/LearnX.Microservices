@@ -43,9 +43,9 @@ public class UpdateCategoryCommandDtoValidator : AbstractValidator<UpdateCategor
             .WithErrorCode(CategoryValidationMessages.IdInvalidCode);
     }
 
-    private bool BeAValidGuid(Guid id)
+    private bool BeAValidGuid(string id)
     {
-        return id != Guid.Empty;
+        return Guid.TryParse(id, out var guid) && guid != Guid.Empty;
     }
 
     private bool NotContainMultipleSpaces(string name)
